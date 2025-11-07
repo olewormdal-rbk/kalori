@@ -12,6 +12,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const workoutTypeSelect = document.getElementById('workout-type');
     const manualKcalInputDiv = document.getElementById('manual-kcal-input');
 
+    // NYE ELEMENTER FOR UKESTATISTIKK
+    const weeklySummaryDiv = document.createElement('div');
+    weeklySummaryDiv.id = 'weekly-summary';
+    weeklySummaryDiv.innerHTML = '<h3>Ukentlig Oppsummering (Man – I dag)</h3><p id="week-in">Inntatt: 0 Kcal</p><p id="week-burned">Forbrukt: 0 Kcal</p>';
+    dashboard.insertBefore(weeklySummaryDiv, document.getElementById('show-add-meal'));
+    // SLUTT NYE ELEMENTER
+
     // Funksjon for å bytte visning
     function changeView(targetId) {
         document.querySelectorAll('.view').forEach(view => {
@@ -27,21 +34,50 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', (e) => changeView(e.target.dataset.target));
     });
 
-    // Funksjon for å laste data fra localStorage
+    // Funksjon for å laste ALL loggdata fra localStorage
+    function getAllLogData() {
+        return JSON.parse(localStorage.getItem('dailyLog')) || {};
+    }
+
+    // NY FUNKSJON: Beregner startdatoen for inneværende uke (Mandag)
+    function getStartOfWeek() {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Søndag, 1 = Mandag, osv.
+        const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Justerer til Mandag
+        const startOfWeek = new Date(now.setDate(diff));
+        startOfWeek.setHours(0, 0, 0, 0); // Setter klokken til midnatt
+        return startOfWeek;
+    }
+
+    // NY FUNKSJON: Henter loggføringer kun for inneværende uke
+    function getWeekLog() {
+        const allLog = getAllLogData();
+        const startOfWeek = getStartOfWeek().getTime();
+        const weekLog = [];
+
+        // Iterer gjennom hver dag i lagringsloggen
+        for (const dateString in allLog) {
+            const date = new Date(dateString);
+
+            // Sjekk om datoen er i inneværende uke (etter eller lik Mandag)
+            if (date.getTime() >= startOfWeek) {
+                weekLog.push(...allLog[dateString]);
+            }
+        }
+        return weekLog;
+    }
+
+    // Henter kun dagens logg
     function getDailyLog() {
         const today = new Date().toDateString();
-        const log = JSON.parse(localStorage.getItem('dailyLog')) || {};
-        
-        // Hent dagens logg, eller en tom liste hvis dagen ikke finnes
-        return log[today] || []; 
+        return getAllLogData()[today] || []; 
     }
 
     // Funksjon for å lagre data til localStorage
     function saveLogEntry(entry) {
         const today = new Date().toDateString();
-        const log = JSON.parse(localStorage.getItem('dailyLog')) || {};
+        const log = getAllLogData();
         
-        // Sjekk om dagens logg eksisterer
         if (!log[today]) {
             log[today] = [];
         }
@@ -49,41 +85,54 @@ document.addEventListener('DOMContentLoaded', function() {
         log[today].push(entry);
         localStorage.setItem('dailyLog', JSON.stringify(log));
         updateDashboard();
-        changeView('dashboard'); // Tilbake til hovedskjermen
+        changeView('dashboard');
     }
 
     // Funksjon for å oppdatere dashboard (beregninger og visning)
     function updateDashboard() {
-        const log = getDailyLog();
-        let totalKcalIn = 0;
-        let totalKcalBurned = 0;
+        const dailyLog = getDailyLog();
+        const weeklyLog = getWeekLog(); // Hent ukens logg
+
+        let dailyKcalIn = 0;
+        let dailyKcalBurned = 0;
+        let weeklyKcalIn = 0;
+        let weeklyKcalBurned = 0;
         
-        // Tøm logglisten
         dailyLogList.innerHTML = '';
 
-        log.forEach(entry => {
-            // Beregn totaler
+        // 1. Beregn Daglige Totaler og vis detaljert logg
+        dailyLog.forEach(entry => {
             if (entry.type === 'meal') {
-                totalKcalIn += entry.kcal;
+                dailyKcalIn += entry.kcal;
                 dailyLogList.innerHTML += `<li>${entry.time} | 🍽️ ${entry.description} <span>+${entry.kcal} Kcal</span></li>`;
             } else if (entry.type === 'workout') {
-                totalKcalBurned += entry.kcal;
+                dailyKcalBurned += entry.kcal;
                 dailyLogList.innerHTML += `<li>${entry.time} | 💪 ${entry.description} <span>-${entry.kcal} Kcal</span></li>`;
             }
         });
 
-        // Beregn og vis netto
-        const totalNet = totalKcalIn - totalKcalBurned;
-        
-        kcalInElement.textContent = totalKcalIn;
-        kcalBurnedElement.textContent = totalKcalBurned;
-        kcalNetElement.textContent = totalNet;
+        // 2. Beregn Ukentlige Totaler
+        weeklyLog.forEach(entry => {
+            if (entry.type === 'meal') {
+                weeklyKcalIn += entry.kcal;
+            } else if (entry.type === 'workout') {
+                weeklyKcalBurned += entry.kcal;
+            }
+        });
 
-        // Fargekod netto Kcal (valgfritt)
+        // Vis daglige data
+        const totalNet = dailyKcalIn - dailyKcalBurned;
+        kcalInElement.textContent = dailyKcalIn;
+        kcalBurnedElement.textContent = dailyKcalBurned;
+        kcalNetElement.textContent = totalNet;
         kcalNetElement.style.color = totalNet > 0 ? '#F44336' : (totalNet < 0 ? '#4CAF50' : '#0d47a1');
+
+        // Vis ukentlige data
+        document.getElementById('week-in').textContent = `Inntatt: ${weeklyKcalIn} Kcal`;
+        document.getElementById('week-burned').textContent = `Forbrukt: ${weeklyKcalBurned} Kcal`;
     }
 
-    // Håndter skjema for måltid
+    // Håndter skjemaer (samme som før)
     mealForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -102,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Håndter skjema for trening
     workoutForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -127,11 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             saveLogEntry(entry);
             workoutForm.reset();
-            manualKcalInputDiv.style.display = 'none'; // Skjul manuelt felt etter lagring
+            manualKcalInputDiv.style.display = 'none'; 
         }
     });
 
-    // Vis/skjul manuelt kcal-felt for trening
     workoutTypeSelect.addEventListener('change', function() {
         if (this.value === 'manual') {
             manualKcalInputDiv.style.display = 'block';
@@ -146,9 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('reset-button').addEventListener('click', function() {
         if (confirm("Er du sikker på at du vil tømme loggen for i dag?")) {
             const today = new Date().toDateString();
-            const log = JSON.parse(localStorage.getItem('dailyLog')) || {};
+            const log = getAllLogData();
             
-            // Fjerner kun dagens logg, ikke hele historikken i log-objektet
             delete log[today]; 
             localStorage.setItem('dailyLog', JSON.stringify(log));
             updateDashboard();

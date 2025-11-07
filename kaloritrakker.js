@@ -6,14 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funksjon for å hente lagret mål eller standardverdi
     function getDailyGoalValue() {
         const goal = localStorage.getItem(DAILY_GOAL_KEY);
-        // Returnerer lagret verdi (konvertert til tall) eller standardverdi (2000)
         return parseInt(goal) || DEFAULT_GOAL;
     }
 
-    // DOM-elementer
+    // DOM-elementer (GRUNNLEGGENDE)
     const dashboard = document.getElementById('dashboard');
-    const addMealView = document.getElementById('add-meal');
-    const addWorkoutView = document.getElementById('add-workout');
     const kcalInElement = document.getElementById('kcal-in');
     const kcalBurnedElement = document.getElementById('kcal-burned');
     const kcalNetElement = document.getElementById('kcal-net');
@@ -22,20 +19,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const workoutForm = document.getElementById('workout-form');
     const workoutTypeSelect = document.getElementById('workout-type');
     const manualKcalInputDiv = document.getElementById('manual-kcal-input');
+    
+    // DOM-elementer (NYTT AI-SØK)
+    const showAiSearchButton = document.getElementById('show-ai-search');
+    const aiSearchDiv = document.getElementById('meal-ai-search');
+    const runAiSearchButton = document.getElementById('run-ai-search');
+    const foodSearchTermInput = document.getElementById('food-search-term');
+    const aiResultStatus = document.getElementById('ai-result-status');
+    const useAiResultButton = document.getElementById('use-ai-result');
+    const mealTypeSelect = document.getElementById('meal-type');
+    const mealKcalInput = document.getElementById('meal-kcal');
+    const mealManualInputDiv = document.getElementById('meal-manual-input');
 
-    // NYE ELEMENTER FOR UKESTATISTIKK
-    const weeklySummaryDiv = document.createElement('div');
-    weeklySummaryDiv.id = 'weekly-summary';
-    weeklySummaryDiv.innerHTML = '<h3>Ukentlig Oppsummering (Man – I dag)</h3><p id="week-in">Inntatt: 0 Kcal</p><p id="week-burned">Forbrukt: 0 Kcal</p>';
-    dashboard.insertBefore(weeklySummaryDiv, document.getElementById('show-add-meal'));
-    // SLUTT NYE ELEMENTER
 
-    // NYTT ELEMENT FOR DAGSMÅL og SETT MÅL-KNAPP
-    const dailyGoalDiv = document.createElement('div');
-    dailyGoalDiv.id = 'daily-goal-container';
-    dailyGoalDiv.innerHTML = '<p>Dagens Mål: <span id="daily-goal-value"></span> Kcal</p><a href="#" id="set-goal-link">Sett Mål</a>';
-    // Sett inn under weekly summary
-    dashboard.insertBefore(dailyGoalDiv, weeklySummaryDiv.nextSibling);
+    // Variabel for å holde det siste AI-resultatet
+    let lastAiResult = null; 
 
     // Funksjon for å bytte visning
     function changeView(targetId) {
@@ -43,14 +41,25 @@ document.addEventListener('DOMContentLoaded', function() {
             view.classList.remove('active');
         });
         document.getElementById(targetId).classList.add('active');
+        
+        // Når vi går tilbake til dashboard, nullstiller vi meal-view state
+        if (targetId === 'dashboard') {
+            // Skjuler AI-søk og viser manuell inntasting igjen
+            mealManualInputDiv.style.display = 'block';
+            aiSearchDiv.style.display = 'none';
+            aiResultStatus.textContent = '';
+            useAiResultButton.style.display = 'none';
+            lastAiResult = null;
+            mealForm.reset();
+        }
     }
 
-    // NY FUNKSJON: Sett dagsmålet
+    // FUNKSJON: Sett dagsmålet
     function setDailyGoal() {
         let currentGoal = getDailyGoalValue();
         const newGoal = prompt(`Angi ditt nye daglige kaloriforbruksmål (i Kcal). Nåværende: ${currentGoal}`, currentGoal);
         
-        if (newGoal === null) return; // Bruker trykket Avbryt
+        if (newGoal === null) return;
         
         const goalValue = parseInt(newGoal);
         
@@ -61,6 +70,23 @@ document.addEventListener('DOMContentLoaded', function() {
             alert("Vennligst oppgi et realistisk mål mellom 500 og 10000 Kcal.");
         }
     }
+    
+    // --- NY FUNKSJON: Simuler AI/API-søk ---
+    function simulateAISearch(query) {
+        const lowerQuery = query.toLowerCase();
+
+        // Simulerte resultater
+        if (lowerQuery.includes('havregryn') && lowerQuery.includes('100g')) return { kcal: 370, description: '100g Havregryn' };
+        if (lowerQuery.includes('kylling') && lowerQuery.includes('150g')) return { kcal: 240, description: '150g stekt kyllingfilet' };
+        if (lowerQuery.includes('brød') || lowerQuery.includes('skive')) return { kcal: 180, description: '2 skiver grovbrød' };
+        if (lowerQuery.includes('eple')) return { kcal: 95, description: '1 Eple (medium)' };
+        if (lowerQuery.includes('cola')) return { kcal: 139, description: '1 boks Cola' };
+        
+        // Generisk resultat
+        const genericKcal = Math.max(100, Math.min(1000, query.length * 30 + 100)); // Gir en varierende, men realistisk kcal basert på lengde
+        return { kcal: genericKcal, description: query };
+    }
+
 
     // Event listeners for navigasjon
     document.getElementById('show-add-meal').addEventListener('click', () => changeView('add-meal'));
@@ -68,11 +94,87 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.back-button').forEach(button => {
         button.addEventListener('click', (e) => changeView(e.target.dataset.target));
     });
-    // Event listener for Sett Mål
     document.getElementById('set-goal-link').addEventListener('click', function(e) {
         e.preventDefault();
         setDailyGoal();
     });
+
+
+    // --- AI/SØK EVENT LISTENERS ---
+
+    // Viser/skjuler AI-søk seksjonen
+    showAiSearchButton.addEventListener('click', function() {
+        const isAiVisible = aiSearchDiv.style.display === 'block';
+        
+        if (!isAiVisible) {
+            // Skjuler manuell inntasting, viser AI-søk
+            mealManualInputDiv.style.display = 'none';
+            aiSearchDiv.style.display = 'block';
+            showAiSearchButton.textContent = 'Tilbake til Manuell Inntasting ✍️';
+        } else {
+            // Skjuler AI-søk, viser manuell inntasting
+            mealManualInputDiv.style.display = 'block';
+            aiSearchDiv.style.display = 'none';
+            showAiSearchButton.textContent = 'Søk etter Kcal (AI) 🔍';
+            
+            // Nullstill AI-status
+            aiResultStatus.textContent = '';
+            useAiResultButton.style.display = 'none';
+            foodSearchTermInput.value = '';
+            lastAiResult = null;
+        }
+    });
+
+    // Kjører AI-søk
+    runAiSearchButton.addEventListener('click', function() {
+        const query = foodSearchTermInput.value.trim();
+        if (query.length < 3) {
+            aiResultStatus.textContent = 'Vennligst skriv inn minst 3 tegn.';
+            useAiResultButton.style.display = 'none';
+            return;
+        }
+
+        aiResultStatus.textContent = 'Søker...';
+        useAiResultButton.style.display = 'none';
+
+        // Simulerer forsinkelse for å etterligne API-kall (800ms)
+        setTimeout(() => {
+            lastAiResult = simulateAISearch(query);
+
+            if (lastAiResult) {
+                // Oppdaterer status med funnet resultat
+                aiResultStatus.innerHTML = `Funnet! **${lastAiResult.description.substring(0, 30)}...** ≈ **${lastAiResult.kcal} Kcal**`;
+                useAiResultButton.style.display = 'block';
+            } else {
+                aiResultStatus.textContent = 'Fant ingen spesifikke treff. Prøv igjen.';
+            }
+        }, 800); 
+    });
+
+    // Bruker AI-resultatet til å loggføre
+    useAiResultButton.addEventListener('click', function() {
+        if (lastAiResult) {
+            // Oppretter en dummy-entry for å loggføre AI-resultatet
+            const entry = {
+                type: 'meal',
+                description: lastAiResult.description,
+                kcal: lastAiResult.kcal,
+                time: new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+            };
+            saveLogEntry(entry);
+            
+            // Går tilbake til manuell inntasting og dashboard
+            mealManualInputDiv.style.display = 'block';
+            aiSearchDiv.style.display = 'none';
+            showAiSearchButton.textContent = 'Søk etter Kcal (AI) 🔍';
+            aiResultStatus.textContent = '';
+            useAiResultButton.style.display = 'none';
+            foodSearchTermInput.value = '';
+            lastAiResult = null;
+        }
+    });
+    // --- SLUTT AI/SØK EVENT LISTENERS ---
+
 
     // Funksjon for å laste ALL loggdata fra localStorage
     function getAllLogData() {
@@ -83,9 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function getStartOfWeek() {
         const now = new Date();
         const dayOfWeek = now.getDay(); // 0 = Søndag, 1 = Mandag, osv.
-        const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Justerer til Mandag
+        const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
         const startOfWeek = new Date(now.setDate(diff));
-        startOfWeek.setHours(0, 0, 0, 0); // Setter klokken til midnatt
+        startOfWeek.setHours(0, 0, 0, 0); 
         return startOfWeek;
     }
 
@@ -94,20 +196,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const allLog = getAllLogData();
         const startOfWeek = getStartOfWeek().getTime();
         const weekLog = [];
-        const uniqueDaysLoggedThisWeek = new Set(); // For å telle unike dager
+        const uniqueDaysLoggedThisWeek = new Set(); 
 
-        // Iterer gjennom hver dag i lagringsloggen
         for (const dateString in allLog) {
             const date = new Date(dateString);
 
-            // Sjekk om datoen er i inneværende uke (etter eller lik Mandag)
             if (date.getTime() >= startOfWeek) {
                 weekLog.push(...allLog[dateString]);
                 uniqueDaysLoggedThisWeek.add(dateString);
             }
         }
         
-        // Returnerer loggen og antallet unike dager for ukentlig baseline-beregning
         return { log: weekLog, days: uniqueDaysLoggedThisWeek.size };
     }
 
@@ -137,14 +236,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const dailyLog = getDailyLog();
         const { log: weeklyLog, days: daysInWeekLogged } = getWeekLog();
         
-        // HENTER NÅ MÅLET DYNAMISK
         const dailyGoal = getDailyGoalValue();
-        // Setter daglig forbrenning til det nye målet
-        let dailyKcalBurned = dailyGoal; 
-        // Ukentlig base = Mål * antall dager med loggføring
-        let weeklyKcalBurned = daysInWeekLogged * dailyGoal;
         
+        // Daglige base = Mål
+        let dailyKcalBurned = dailyGoal; 
         let dailyKcalIn = 0;
+        
+        // Ukentlig base = Mål * antall dager med loggføring (hver dag teller mot målet)
+        let weeklyKcalBurned = daysInWeekLogged * dailyGoal;
         let weeklyKcalIn = 0;
         
         dailyLogList.innerHTML = '';
@@ -172,12 +271,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Vis daglige data
         const totalNet = dailyKcalIn - dailyKcalBurned;
         
-        // VISER NÅ MÅLET PÅ DASHBORDET
         document.getElementById('daily-goal-value').textContent = dailyGoal;
         
         kcalInElement.textContent = dailyKcalIn;
         kcalBurnedElement.textContent = dailyKcalBurned;
         kcalNetElement.textContent = totalNet;
+        
         kcalNetElement.style.color = totalNet > 0 ? '#F44336' : (totalNet < 0 ? '#4CAF50' : '#0d47a1');
 
         // Vis ukentlige data
@@ -185,14 +284,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('week-burned').textContent = `Forbrukt: ${weeklyKcalBurned} Kcal`;
     }
 
-    // Håndter skjemaer (samme som før, men uten BASE_CALORIE_BURN_DAILY)
+    // Håndter skjemaer
     mealForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        // ... (Koden for mealForm er uendret)
         
-        const kcal = parseInt(document.getElementById('meal-kcal').value);
-        const type = document.getElementById('meal-type').value;
+        // Bruker data fra de manuelle feltene
+        const kcal = parseInt(mealKcalInput.value);
+        const type = mealTypeSelect.value;
         
+        // Hvis AI-søk er aktivt, vil loggføringen skje via 'use-ai-result' knappen, men vi sikrer at vi logger dersom submit trykkes manuelt.
         if (kcal && type) {
             const entry = {
                 type: 'meal',
@@ -207,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     workoutForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        // ... (Koden for workoutForm er uendret)
         
         const selectedOption = workoutTypeSelect.value;
         let kcal = 0;
@@ -259,106 +358,3 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial lasting av data
     updateDashboard();
 });
-// --- Ny Simuleringsfunksjon for AI-søk (legg til i kaloritrakker.js) ---
-function simulateAISearch(query) {
-    const lowerQuery = query.toLowerCase();
-
-    // Simulerte resultater for vanlige matvarer
-    if (lowerQuery.includes('havregryn') && lowerQuery.includes('100g')) return { kcal: 370, description: '100g Havregryn' };
-    if (lowerQuery.includes('kylling') && lowerQuery.includes('150g')) return { kcal: 240, description: '150g stekt kyllingfilet' };
-    if (lowerQuery.includes('brød') || lowerQuery.includes('skive')) return { kcal: 180, description: '2 skiver grovbrød' };
-    if (lowerQuery.includes('eple')) return { kcal: 95, description: '1 Eple (medium)' };
-    if (lowerQuery.includes('cola')) return { kcal: 139, description: '1 boks Cola' };
-    
-    // Hvis ingen spesifikke treff, simulerer vi en generell verdi
-    return { kcal: 450, description: query.substring(0, 30) };
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // ... (Behold all din eksisterende kode her) ...
-    
-    // --- Nye DOM-elementer for AI-søk ---
-    const showAiSearchButton = document.getElementById('show-ai-search');
-    const aiSearchDiv = document.getElementById('meal-ai-search');
-    const runAiSearchButton = document.getElementById('run-ai-search');
-    const foodSearchTermInput = document.getElementById('food-search-term');
-    const aiResultStatus = document.getElementById('ai-result-status');
-    const useAiResultButton = document.getElementById('use-ai-result');
-    const manualKcalInput = document.getElementById('meal-kcal');
-    const manualLogButton = document.getElementById('manual-log-button');
-    const mealManualInputDiv = document.getElementById('meal-manual-input');
-
-    let lastAiResult = null; 
-
-    // Event listener for å vise/skjule AI-søket
-    showAiSearchButton.addEventListener('click', function() {
-        const isAiVisible = aiSearchDiv.style.display === 'block';
-        
-        if (!isAiVisible) {
-            // Skjuler manuell inntasting, viser AI-søk
-            mealManualInputDiv.style.display = 'none';
-            manualLogButton.textContent = 'Loggfør Måltid (Fra AI-søk)';
-            aiSearchDiv.style.display = 'block';
-        } else {
-            // Skjuler AI-søk, viser manuell inntasting
-            mealManualInputDiv.style.display = 'block';
-            manualLogButton.textContent = 'Loggfør Måltid (Manuell)';
-            aiSearchDiv.style.display = 'none';
-            aiResultStatus.textContent = '';
-            useAiResultButton.style.display = 'none';
-            lastAiResult = null;
-        }
-    });
-
-    // Event listener for å kjøre AI-søk
-    runAiSearchButton.addEventListener('click', function() {
-        const query = foodSearchTermInput.value.trim();
-        if (query.length < 3) {
-            aiResultStatus.textContent = 'Vennligst skriv inn minst 3 tegn.';
-            useAiResultButton.style.display = 'none';
-            return;
-        }
-
-        aiResultStatus.textContent = 'Søker...';
-        useAiResultButton.style.display = 'none';
-
-        // Simulerer forsinkelse for å etterligne API-kall
-        setTimeout(() => {
-            lastAiResult = simulateAISearch(query);
-
-            if (lastAiResult) {
-                aiResultStatus.innerHTML = `Funnet! **${lastAiResult.description}** ≈ **${lastAiResult.kcal} Kcal**`;
-                useAiResultButton.style.display = 'block';
-            } else {
-                aiResultStatus.textContent = 'Fant ingen spesifikke treff. Prøv igjen.';
-            }
-        }, 800); 
-    });
-
-    // Event listener for å bruke AI-resultatet
-    useAiResultButton.addEventListener('click', function() {
-        if (lastAiResult) {
-            // Overfører AI-resultatet til de skjulte skjema-feltene
-            document.getElementById('meal-type').value = 'Annet'; // Setter en generisk type
-            document.getElementById('meal-kcal').value = lastAiResult.kcal;
-            
-            // Loggfør måltidet umiddelbart ved å simulere et skjema-submit
-            const submitEvent = new Event('submit');
-            mealForm.dispatchEvent(submitEvent);
-            
-            // Tilbakestill visningen etter loggføring
-            mealManualInputDiv.style.display = 'block';
-            manualLogButton.textContent = 'Loggfør Måltid (Manuell)';
-            aiSearchDiv.style.display = 'none';
-            aiResultStatus.textContent = '';
-            useAiResultButton.style.display = 'none';
-            lastAiResult = null;
-        }
-    });
-
-    // ... (fortsett med resten av din eksisterende kode, f.eks. mealForm.addEventListener('submit', function(e) { ... })) ...
-
-    // VIKTIG: Sikre at din loggføringsfunksjon (mealForm.addEventListener('submit'))
-    // nå bruker verdien i meal-kcal og meal-type, uansett om den kom fra AI eller manuelt.
-});
-

@@ -259,3 +259,106 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial lasting av data
     updateDashboard();
 });
+// --- Ny Simuleringsfunksjon for AI-søk (legg til i kaloritrakker.js) ---
+function simulateAISearch(query) {
+    const lowerQuery = query.toLowerCase();
+
+    // Simulerte resultater for vanlige matvarer
+    if (lowerQuery.includes('havregryn') && lowerQuery.includes('100g')) return { kcal: 370, description: '100g Havregryn' };
+    if (lowerQuery.includes('kylling') && lowerQuery.includes('150g')) return { kcal: 240, description: '150g stekt kyllingfilet' };
+    if (lowerQuery.includes('brød') || lowerQuery.includes('skive')) return { kcal: 180, description: '2 skiver grovbrød' };
+    if (lowerQuery.includes('eple')) return { kcal: 95, description: '1 Eple (medium)' };
+    if (lowerQuery.includes('cola')) return { kcal: 139, description: '1 boks Cola' };
+    
+    // Hvis ingen spesifikke treff, simulerer vi en generell verdi
+    return { kcal: 450, description: query.substring(0, 30) };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ... (Behold all din eksisterende kode her) ...
+    
+    // --- Nye DOM-elementer for AI-søk ---
+    const showAiSearchButton = document.getElementById('show-ai-search');
+    const aiSearchDiv = document.getElementById('meal-ai-search');
+    const runAiSearchButton = document.getElementById('run-ai-search');
+    const foodSearchTermInput = document.getElementById('food-search-term');
+    const aiResultStatus = document.getElementById('ai-result-status');
+    const useAiResultButton = document.getElementById('use-ai-result');
+    const manualKcalInput = document.getElementById('meal-kcal');
+    const manualLogButton = document.getElementById('manual-log-button');
+    const mealManualInputDiv = document.getElementById('meal-manual-input');
+
+    let lastAiResult = null; 
+
+    // Event listener for å vise/skjule AI-søket
+    showAiSearchButton.addEventListener('click', function() {
+        const isAiVisible = aiSearchDiv.style.display === 'block';
+        
+        if (!isAiVisible) {
+            // Skjuler manuell inntasting, viser AI-søk
+            mealManualInputDiv.style.display = 'none';
+            manualLogButton.textContent = 'Loggfør Måltid (Fra AI-søk)';
+            aiSearchDiv.style.display = 'block';
+        } else {
+            // Skjuler AI-søk, viser manuell inntasting
+            mealManualInputDiv.style.display = 'block';
+            manualLogButton.textContent = 'Loggfør Måltid (Manuell)';
+            aiSearchDiv.style.display = 'none';
+            aiResultStatus.textContent = '';
+            useAiResultButton.style.display = 'none';
+            lastAiResult = null;
+        }
+    });
+
+    // Event listener for å kjøre AI-søk
+    runAiSearchButton.addEventListener('click', function() {
+        const query = foodSearchTermInput.value.trim();
+        if (query.length < 3) {
+            aiResultStatus.textContent = 'Vennligst skriv inn minst 3 tegn.';
+            useAiResultButton.style.display = 'none';
+            return;
+        }
+
+        aiResultStatus.textContent = 'Søker...';
+        useAiResultButton.style.display = 'none';
+
+        // Simulerer forsinkelse for å etterligne API-kall
+        setTimeout(() => {
+            lastAiResult = simulateAISearch(query);
+
+            if (lastAiResult) {
+                aiResultStatus.innerHTML = `Funnet! **${lastAiResult.description}** ≈ **${lastAiResult.kcal} Kcal**`;
+                useAiResultButton.style.display = 'block';
+            } else {
+                aiResultStatus.textContent = 'Fant ingen spesifikke treff. Prøv igjen.';
+            }
+        }, 800); 
+    });
+
+    // Event listener for å bruke AI-resultatet
+    useAiResultButton.addEventListener('click', function() {
+        if (lastAiResult) {
+            // Overfører AI-resultatet til de skjulte skjema-feltene
+            document.getElementById('meal-type').value = 'Annet'; // Setter en generisk type
+            document.getElementById('meal-kcal').value = lastAiResult.kcal;
+            
+            // Loggfør måltidet umiddelbart ved å simulere et skjema-submit
+            const submitEvent = new Event('submit');
+            mealForm.dispatchEvent(submitEvent);
+            
+            // Tilbakestill visningen etter loggføring
+            mealManualInputDiv.style.display = 'block';
+            manualLogButton.textContent = 'Loggfør Måltid (Manuell)';
+            aiSearchDiv.style.display = 'none';
+            aiResultStatus.textContent = '';
+            useAiResultButton.style.display = 'none';
+            lastAiResult = null;
+        }
+    });
+
+    // ... (fortsett med resten av din eksisterende kode, f.eks. mealForm.addEventListener('submit', function(e) { ... })) ...
+
+    // VIKTIG: Sikre at din loggføringsfunksjon (mealForm.addEventListener('submit'))
+    // nå bruker verdien i meal-kcal og meal-type, uansett om den kom fra AI eller manuelt.
+});
+

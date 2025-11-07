@@ -5,8 +5,236 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaloritrakker MVP</title>
     
-    <link rel="stylesheet" href="DIN_CSS_FILNAVN.css"> 
-    
+    <style>
+        :root {
+            --primary-color: #0d47a1; /* Dyp Blå */
+            --secondary-color: #4CAF50; /* Grønn */
+            --warning-color: #F44336; /* Rød */
+            --background-light: #f5f5f5;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--background-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .view {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* --- DASHBOARD STYLING --- */
+        #dashboard h2 {
+            margin-top: 0;
+        }
+
+        #summary {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-box p {
+            font-size: 14px;
+            margin: 0 0 5px 0;
+            color: #555;
+        }
+
+        .stat-box span {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+
+        #kcal-net {
+            color: var(--primary-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .action-buttons button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .action-buttons button:hover {
+            background-color: #388e3c;
+        }
+
+        /* Dagens Logg */
+        #daily-log-container h3 {
+            color: var(--primary-color);
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        #daily-log li {
+            list-style: none;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        #daily-log li span {
+            font-weight: bold;
+        }
+
+        /* --- FORM STYLING --- */
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="number"], select {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-button:hover {
+            background-color: #0d3b84;
+        }
+
+        .back-button {
+            background: #ccc;
+            color: #333;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* Styling for Ukentlig Oppsummering */
+        #weekly-summary {
+            background-color: #e3f2fd; /* Lys blå bakgrunn */
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0 30px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--primary-color);
+            text-align: left;
+        }
+
+        #weekly-summary h3 {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin: 0 0 10px 0;
+            padding: 0;
+        }
+
+        #weekly-summary p {
+            margin: 5px 0;
+            font-size: 15px;
+            color: #333;
+        }
+        
+        /* Styling for Sett Mål-funksjonen */
+        #daily-goal-container {
+            background-color: #fff3e0; /* Lysegul/oransje bakgrunn */
+            padding: 10px 15px;
+            margin: 0 0 15px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #daily-goal-container p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        #daily-goal-value {
+            font-weight: 700;
+            color: #ff6f00; /* Dyp oransje */
+        }
+
+        #set-goal-link {
+            color: #1976d2; /* Blå lenke */
+            text-decoration: none;
+            font-weight: 600;
+            padding: 5px 10px;
+            border: 1px solid #1976d2;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        #set-goal-link:active {
+            background-color: #e0f7fa;
+        }
+    </style>
     </head>
 <body>
     <main>
@@ -55,36 +283,19 @@
         <div id="add-meal" class="view">
             <h2>Legg til Måltid</h2>
             <form id="meal-form">
-                
-                <div id="meal-manual-input" style="display: block;">
-                    <label for="meal-type">Beskrivelse:</label>
-                    <select id="meal-type" required>
-                        <option value="Frokost">Frokost</option>
-                        <option value="Lunsj">Lunsj</option>
-                        <option value="Middag">Middag</option>
-                        <option value="Kveldsmat">Kveldsmat</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Annet">Annet</option> </select>
+                <label for="meal-type">Beskrivelse:</label>
+                <select id="meal-type" required>
+                    <option value="Frokost">Frokost</option>
+                    <option value="Lunsj">Lunsj</option>
+                    <option value="Middag">Middag</option>
+                    <option value="Kveldsmat">Kveldsmat</option>
+                    <option value="Snacks">Snacks</option>
+                </select>
 
-                    <label for="meal-kcal">Antall Kcal:</label>
-                    <input type="number" id="meal-kcal" required min="1" placeholder="F.eks. 550">
-                </div>
-                
-                <button type="button" id="show-ai-search" class="submit-button" style="margin-top: 15px; background: #1976d2;">Søk etter Kcal (AI) 🔍</button>
+                <label for="meal-kcal">Antall Kcal:</label>
+                <input type="number" id="meal-kcal" required min="1" placeholder="F.eks. 550">
 
-                <div id="meal-ai-search" style="display: none; margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-                    <label for="food-search-term">Søk etter matvare (f.eks. "100g havregryn"):</label>
-                    <input type="text" id="food-search-term" placeholder="Skriv inn matvare og mengde">
-                    
-                    <button type="button" id="run-ai-search" class="submit-button" style="margin-top: 10px; background: #00897b;">Søk</button>
-                    
-                    <p id="ai-result-status" style="margin-top: 10px; font-weight: bold;"></p>
-                    
-                    <button type="button" id="use-ai-result" class="submit-button" style="display: none; background: #FF9800;">Bruk Kaloriverdi</button>
-                </div>
-
-
-                <button type="submit" class="submit-button" id="manual-log-button">Loggfør Måltid</button>
+                <button type="submit" class="submit-button">Loggfør Måltid</button>
                 <button type="button" class="back-button" data-target="dashboard">Tilbake til Dashboard</button>
             </form>
         </div>
@@ -114,6 +325,247 @@
 
     </main>
 
-    <script src="DIN_JS_FILNAVN.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // KONSTANTER
+            const DAILY_GOAL_KEY = 'dailyGoal';
+            const DEFAULT_GOAL = 2000;
+
+            // Funksjon for å hente lagret mål eller standardverdi
+            function getDailyGoalValue() {
+                const goal = localStorage.getItem(DAILY_GOAL_KEY);
+                // Returnerer lagret verdi (konvertert til tall) eller standardverdi (2000)
+                return parseInt(goal) || DEFAULT_GOAL;
+            }
+
+            // DOM-elementer
+            const dashboard = document.getElementById('dashboard');
+            const kcalInElement = document.getElementById('kcal-in');
+            const kcalBurnedElement = document.getElementById('kcal-burned');
+            const kcalNetElement = document.getElementById('kcal-net');
+            const dailyLogList = document.getElementById('daily-log');
+            const mealForm = document.getElementById('meal-form');
+            const workoutForm = document.getElementById('workout-form');
+            const workoutTypeSelect = document.getElementById('workout-type');
+            const manualKcalInputDiv = document.getElementById('manual-kcal-input');
+
+            // Funksjon for å bytte visning
+            function changeView(targetId) {
+                document.querySelectorAll('.view').forEach(view => {
+                    view.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+            }
+
+            // FUNKSJON: Sett dagsmålet (Brukes av Sett Mål-lenken)
+            function setDailyGoal() {
+                let currentGoal = getDailyGoalValue();
+                const newGoal = prompt(`Angi ditt nye daglige kaloriforbruksmål (i Kcal). Nåværende: ${currentGoal}`, currentGoal);
+                
+                if (newGoal === null) return; // Bruker trykket Avbryt
+                
+                const goalValue = parseInt(newGoal);
+                
+                if (goalValue > 500 && goalValue < 10000) {
+                    localStorage.setItem(DAILY_GOAL_KEY, goalValue);
+                    updateDashboard();
+                } else {
+                    alert("Vennligst oppgi et realistisk mål mellom 500 og 10000 Kcal.");
+                }
+            }
+
+            // Event listeners for navigasjon
+            document.getElementById('show-add-meal').addEventListener('click', () => changeView('add-meal'));
+            document.getElementById('show-add-workout').addEventListener('click', () => changeView('add-workout'));
+            document.querySelectorAll('.back-button').forEach(button => {
+                button.addEventListener('click', (e) => changeView(e.target.dataset.target));
+            });
+            // Event listener for Sett Mål
+            document.getElementById('set-goal-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                setDailyGoal();
+            });
+
+            // Funksjon for å laste ALL loggdata fra localStorage
+            function getAllLogData() {
+                return JSON.parse(localStorage.getItem('dailyLog')) || {};
+            }
+
+            // Beregner startdatoen for inneværende uke (Mandag)
+            function getStartOfWeek() {
+                const now = new Date();
+                const dayOfWeek = now.getDay(); // 0 = Søndag, 1 = Mandag, osv.
+                const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Justerer til Mandag
+                const startOfWeek = new Date(now.setDate(diff));
+                startOfWeek.setHours(0, 0, 0, 0); // Setter klokken til midnatt
+                return startOfWeek;
+            }
+
+            // Henter loggføringer kun for inneværende uke
+            function getWeekLog() {
+                const allLog = getAllLogData();
+                const startOfWeek = getStartOfWeek().getTime();
+                const weekLog = [];
+                const uniqueDaysLoggedThisWeek = new Set(); 
+
+                for (const dateString in allLog) {
+                    const date = new Date(dateString);
+
+                    if (date.getTime() >= startOfWeek) {
+                        weekLog.push(...allLog[dateString]);
+                        uniqueDaysLoggedThisWeek.add(dateString);
+                    }
+                }
+                
+                return { log: weekLog, days: uniqueDaysLoggedThisWeek.size };
+            }
+
+            // Henter kun dagens logg
+            function getDailyLog() {
+                const today = new Date().toDateString();
+                return getAllLogData()[today] || []; 
+            }
+
+            // Funksjon for å lagre data til localStorage
+            function saveLogEntry(entry) {
+                const today = new Date().toDateString();
+                const log = getAllLogData();
+                
+                if (!log[today]) {
+                    log[today] = [];
+                }
+                
+                log[today].push(entry);
+                localStorage.setItem('dailyLog', JSON.stringify(log));
+                updateDashboard();
+                changeView('dashboard');
+            }
+
+            // Funksjon for å oppdatere dashboard (beregninger og visning)
+            function updateDashboard() {
+                const dailyLog = getDailyLog();
+                const { log: weeklyLog, days: daysInWeekLogged } = getWeekLog();
+                
+                const dailyGoal = getDailyGoalValue();
+                
+                // Daglige base = Mål
+                let dailyKcalBurned = dailyGoal; 
+                // Ukentlig base = Mål * antall dager med loggføring
+                let weeklyKcalBurned = daysInWeekLogged * dailyGoal;
+                
+                let dailyKcalIn = 0;
+                let weeklyKcalIn = 0;
+                
+                dailyLogList.innerHTML = '';
+
+                // 1. Beregn Daglige Totaler og vis detaljert logg
+                dailyLog.forEach(entry => {
+                    if (entry.type === 'meal') {
+                        dailyKcalIn += entry.kcal;
+                        dailyLogList.innerHTML += `<li>${entry.time} | 🍽️ ${entry.description} <span>+${entry.kcal} Kcal</span></li>`;
+                    } else if (entry.type === 'workout') {
+                        dailyKcalBurned += entry.kcal; 
+                        dailyLogList.innerHTML += `<li>${entry.time} | 💪 ${entry.description} <span>-${entry.kcal} Kcal</span></li>`;
+                    }
+                });
+
+                // 2. Beregn Ukentlige Totaler
+                weeklyLog.forEach(entry => {
+                    if (entry.type === 'meal') {
+                        weeklyKcalIn += entry.kcal;
+                    } else if (entry.type === 'workout') {
+                        weeklyKcalBurned += entry.kcal;
+                    }
+                });
+
+                // Vis daglige data
+                const totalNet = dailyKcalIn - dailyKcalBurned;
+                
+                document.getElementById('daily-goal-value').textContent = dailyGoal;
+                
+                kcalInElement.textContent = dailyKcalIn;
+                kcalBurnedElement.textContent = dailyKcalBurned;
+                kcalNetElement.textContent = totalNet;
+                // Fargelegg netto-tallet
+                kcalNetElement.style.color = totalNet > 0 ? '#F44336' : (totalNet < 0 ? '#4CAF50' : '#0d47a1');
+
+                // Vis ukentlige data
+                document.getElementById('week-in').textContent = `Inntatt: ${weeklyKcalIn} Kcal`;
+                document.getElementById('week-burned').textContent = `Forbrukt: ${weeklyKcalBurned} Kcal`;
+            }
+
+            // Håndter skjemaer
+            mealForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const kcal = parseInt(document.getElementById('meal-kcal').value);
+                const type = document.getElementById('meal-type').value;
+                
+                if (kcal && type) {
+                    const entry = {
+                        type: 'meal',
+                        description: type,
+                        kcal: kcal,
+                        time: new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+                    };
+                    saveLogEntry(entry);
+                    mealForm.reset();
+                }
+            });
+
+            workoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const selectedOption = workoutTypeSelect.value;
+                let kcal = 0;
+                let description = '';
+
+                if (selectedOption === 'manual') {
+                    kcal = parseInt(document.getElementById('workout-kcal').value);
+                    description = 'Manuell Trening';
+                } else {
+                    kcal = parseInt(selectedOption);
+                    description = workoutTypeSelect.options[workoutTypeSelect.selectedIndex].text.split('(')[0].trim();
+                }
+                
+                if (kcal > 0) {
+                    const entry = {
+                        type: 'workout',
+                        description: description,
+                        kcal: kcal,
+                        time: new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+                    };
+                    saveLogEntry(entry);
+                    workoutForm.reset();
+                    manualKcalInputDiv.style.display = 'none'; 
+                }
+            });
+
+            workoutTypeSelect.addEventListener('change', function() {
+                if (this.value === 'manual') {
+                    manualKcalInputDiv.style.display = 'block';
+                    document.getElementById('workout-kcal').setAttribute('required', 'required');
+                } else {
+                    manualKcalInputDiv.style.display = 'none';
+                    document.getElementById('workout-kcal').removeAttribute('required');
+                }
+            });
+            
+            // Håndter Tøm Logg-knappen
+            document.getElementById('reset-button').addEventListener('click', function() {
+                if (confirm("Er du sikker på at du vil tømme loggen for i dag?")) {
+                    const today = new Date().toDateString();
+                    const log = getAllLogData();
+                    
+                    delete log[today]; 
+                    localStorage.setItem('dailyLog', JSON.stringify(log));
+                    updateDashboard();
+                }
+            });
+
+            // Initial lasting av data
+            updateDashboard();
+        });
+    </script>
     </body>
 </html>

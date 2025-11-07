@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min Kcal Tracker MVP</title>
+    <link rel="stylesheet" href="kaloritrakker.css">
+</head>
+<body>
+
+    <div id="app-container">
+        <header>
+            <h1>Kalori & Treningslogg</h1>
+        </header>
+
+        <section id="dashboard" class="view active">
+            <h2>Dagens Oversikt</h2>
+            
+            <div class="summary-grid">
+                <div class="summary-box intake">
+                    <h3>Inntatt (Kcal)</h3>
+                    <p id="kcal-in">0</p>
+                </div>
+                <div class="summary-box burned">
+                    <h3>Forbrukt (Kcal)</h3>
+                    <p id="kcal-burned">0</p>
+                </div>
+                <div class="summary-box net">
+                    <h3>Netto Kcal</h3>
+                    <p id="kcal-net">0</p>
+                </div>
+            </div>
+
+            <button id="show-add-meal" class="action-button">➕ Legg til Måltid</button>
+            <button id="show-add-workout" class="action-button secondary">💪 Legg til Trening</button>
+
+            <h3>Detaljert Logg</h3>
+            <ul id="daily-log">
+                </ul>
+            <button id="reset-button" class="reset-button">Tøm Dagens Logg</button>
+        </section>
+
+        <section id="add-meal" class="view form-view">
+            <h2>Legg til Måltid</h2>
+            <form id="meal-form">
+                <label for="meal-type">Måltid:</label>
+                <select id="meal-type" required>
+                    <option value="Frokost">Frokost</option>
+                    <option value="Lunsj">Lunsj</option>
+                    <option value="Middag">Middag</option>
+                    <option value="Snack">Snack</option>
+                </select>
+                
+                <label for="meal-kcal">Kalorier (Kcal):</label>
+                <input type="number" id="meal-kcal" min="1" required>
+
+                <button type="submit" class="submit-button">Loggfør Måltid</button>
+            </form>
+            <button class="back-button" data-target="dashboard">← Tilbake</button>
+        </section>
+
+        <section id="add-workout" class="view form-view">
+            <h2>Legg til Trening</h2>
+            <form id="workout-form">
+                <label for="workout-type">Velg Treningsplan/Aktivitet:</label>
+                <select id="workout-type" required>
+                    <option value="400">Løping 30 min (400 Kcal)</option>
+                    <option value="550">Styrketrening 1 time (550 Kcal)</option>
+                    <option value="200">Gange 1 time (200 Kcal)</option>
+                    <option value="manual">Manuell Kcal inntasting</option>
+                </select>
+                
+                <div id="manual-kcal-input" style="display:none;">
+                    <label for="workout-kcal">Kalorier Forbrukt (Kcal):</label>
+                    <input type="number" id="workout-kcal" min="1">
+                </div>
+                
+                <div class="note">
+                    *I en ekte app ville dette feltet hentes automatisk fra iPhone Health App (HealthKit).
+                    For denne MVP-en må du legge det inn manuelt.
+                </div>
+                
+                <button type="submit" class="submit-button">Loggfør Trening</button>
+            </form>
+            <button class="back-button" data-target="dashboard">← Tilbake</button>
+        </section>
+
+    </div>
+
+    <script src="kaloritrakker.js"></script>
+</body>
+</html>

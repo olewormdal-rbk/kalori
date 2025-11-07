@@ -1,6 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // NY KONSTANT: Standard daglig forbrenning (kan justeres av brukeren senere)
-    const BASE_CALORIE_BURN_DAILY = 2000; 
+    // KONSTANTER
+    const DAILY_GOAL_KEY = 'dailyGoal';
+    const DEFAULT_GOAL = 2000;
+
+    // Funksjon for å hente lagret mål eller standardverdi
+    function getDailyGoalValue() {
+        const goal = localStorage.getItem(DAILY_GOAL_KEY);
+        // Returnerer lagret verdi (konvertert til tall) eller standardverdi (2000)
+        return parseInt(goal) || DEFAULT_GOAL;
+    }
 
     // DOM-elementer
     const dashboard = document.getElementById('dashboard');
@@ -22,6 +30,13 @@ document.addEventListener('DOMContentLoaded', function() {
     dashboard.insertBefore(weeklySummaryDiv, document.getElementById('show-add-meal'));
     // SLUTT NYE ELEMENTER
 
+    // NYTT ELEMENT FOR DAGSMÅL og SETT MÅL-KNAPP
+    const dailyGoalDiv = document.createElement('div');
+    dailyGoalDiv.id = 'daily-goal-container';
+    dailyGoalDiv.innerHTML = '<p>Dagens Mål: <span id="daily-goal-value"></span> Kcal</p><a href="#" id="set-goal-link">Sett Mål</a>';
+    // Sett inn under weekly summary
+    dashboard.insertBefore(dailyGoalDiv, weeklySummaryDiv.nextSibling);
+
     // Funksjon for å bytte visning
     function changeView(targetId) {
         document.querySelectorAll('.view').forEach(view => {
@@ -30,11 +45,33 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(targetId).classList.add('active');
     }
 
+    // NY FUNKSJON: Sett dagsmålet
+    function setDailyGoal() {
+        let currentGoal = getDailyGoalValue();
+        const newGoal = prompt(`Angi ditt nye daglige kaloriforbruksmål (i Kcal). Nåværende: ${currentGoal}`, currentGoal);
+        
+        if (newGoal === null) return; // Bruker trykket Avbryt
+        
+        const goalValue = parseInt(newGoal);
+        
+        if (goalValue > 500 && goalValue < 10000) {
+            localStorage.setItem(DAILY_GOAL_KEY, goalValue);
+            updateDashboard();
+        } else {
+            alert("Vennligst oppgi et realistisk mål mellom 500 og 10000 Kcal.");
+        }
+    }
+
     // Event listeners for navigasjon
     document.getElementById('show-add-meal').addEventListener('click', () => changeView('add-meal'));
     document.getElementById('show-add-workout').addEventListener('click', () => changeView('add-workout'));
     document.querySelectorAll('.back-button').forEach(button => {
         button.addEventListener('click', (e) => changeView(e.target.dataset.target));
+    });
+    // Event listener for Sett Mål
+    document.getElementById('set-goal-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        setDailyGoal();
     });
 
     // Funksjon for å laste ALL loggdata fra localStorage
@@ -98,17 +135,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funksjon for å oppdatere dashboard (beregninger og visning)
     function updateDashboard() {
         const dailyLog = getDailyLog();
-        const { log: weeklyLog, days: daysInWeekLogged } = getWeekLog(); // Henter ukens logg og antall dager
-
+        const { log: weeklyLog, days: daysInWeekLogged } = getWeekLog();
+        
+        // HENTER NÅ MÅLET DYNAMISK
+        const dailyGoal = getDailyGoalValue();
+        // Setter daglig forbrenning til det nye målet
+        let dailyKcalBurned = dailyGoal; 
+        // Ukentlig base = Mål * antall dager med loggføring
+        let weeklyKcalBurned = daysInWeekLogged * dailyGoal;
+        
         let dailyKcalIn = 0;
-        // START ENDRING: Legg til standard daglig forbruk
-        let dailyKcalBurned = BASE_CALORIE_BURN_DAILY; 
-        // SLUTT ENDRING
-
         let weeklyKcalIn = 0;
-        // START ENDRING: Ukentlig base = Base * antall dager med loggføring
-        let weeklyKcalBurned = daysInWeekLogged * BASE_CALORIE_BURN_DAILY; 
-        // SLUTT ENDRING
         
         dailyLogList.innerHTML = '';
 
@@ -118,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 dailyKcalIn += entry.kcal;
                 dailyLogList.innerHTML += `<li>${entry.time} | 🍽️ ${entry.description} <span>+${entry.kcal} Kcal</span></li>`;
             } else if (entry.type === 'workout') {
-                // Trening legges til over standardforbruket
                 dailyKcalBurned += entry.kcal; 
                 dailyLogList.innerHTML += `<li>${entry.time} | 💪 ${entry.description} <span>-${entry.kcal} Kcal</span></li>`;
             }
@@ -129,13 +165,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (entry.type === 'meal') {
                 weeklyKcalIn += entry.kcal;
             } else if (entry.type === 'workout') {
-                // Trening legges til over ukens baseline
                 weeklyKcalBurned += entry.kcal;
             }
         });
 
         // Vis daglige data
         const totalNet = dailyKcalIn - dailyKcalBurned;
+        
+        // VISER NÅ MÅLET PÅ DASHBORDET
+        document.getElementById('daily-goal-value').textContent = dailyGoal;
+        
         kcalInElement.textContent = dailyKcalIn;
         kcalBurnedElement.textContent = dailyKcalBurned;
         kcalNetElement.textContent = totalNet;
@@ -146,9 +185,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('week-burned').textContent = `Forbrukt: ${weeklyKcalBurned} Kcal`;
     }
 
-    // Håndter skjemaer (samme som før)
+    // Håndter skjemaer (samme som før, men uten BASE_CALORIE_BURN_DAILY)
     mealForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        // ... (Koden for mealForm er uendret)
         
         const kcal = parseInt(document.getElementById('meal-kcal').value);
         const type = document.getElementById('meal-type').value;
@@ -167,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     workoutForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        // ... (Koden for workoutForm er uendret)
         
         const selectedOption = workoutTypeSelect.value;
         let kcal = 0;

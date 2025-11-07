@@ -3,90 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Min Kcal Tracker MVP</title>
-    <link rel="stylesheet" href="kaloritrakker.css">
-</head>
+    <title>Kaloritrakker MVP</title>
+    
+    <link rel="stylesheet" href="DIN_CSS_FILNAVN.css"> 
+    
+    </head>
 <body>
+    <main>
+        
+        <div id="dashboard" class="view active">
+            <h2>Kaloritrakker</h2>
 
-    <div id="app-container">
-        <header>
-            <h1>Kalori & Treningslogg</h1>
-        </header>
+            <div id="daily-goal-container">
+                <p>Dagens Mål: <span id="daily-goal-value"></span> Kcal</p>
+                <a href="#" id="set-goal-link">Sett Mål</a>
+            </div>
 
-        <section id="dashboard" class="view active">
-            <h2>Dagens Oversikt</h2>
+            <div id="weekly-summary">
+                <h3>Ukentlig Oppsummering (Man – I dag)</h3>
+                <p id="week-in">Inntatt: 0 Kcal</p>
+                <p id="week-burned">Forbrukt: 0 Kcal</p>
+            </div>
             
-            <div class="summary-grid">
-                <div class="summary-box intake">
-                    <h3>Inntatt (Kcal)</h3>
-                    <p id="kcal-in">0</p>
+            <div id="summary">
+                <div class="stat-box" style="border-left: 3px solid #1e88e5;">
+                    <p>Inntatt</p>
+                    <span id="kcal-in">0</span>
                 </div>
-                <div class="summary-box burned">
-                    <h3>Forbrukt (Kcal)</h3>
-                    <p id="kcal-burned">0</p>
+                <div class="stat-box" style="border-left: 3px solid var(--secondary-color);">
+                    <p>Forbrukt</p>
+                    <span id="kcal-burned">0</span>
                 </div>
-                <div class="summary-box net">
-                    <h3>Netto Kcal</h3>
-                    <p id="kcal-net">0</p>
+                <div class="stat-box" style="border-left: 3px solid var(--primary-color);">
+                    <p>Netto</p>
+                    <span id="kcal-net">0</span>
                 </div>
             </div>
 
-            <button id="show-add-meal" class="action-button">➕ Legg til Måltid</button>
-            <button id="show-add-workout" class="action-button secondary">💪 Legg til Trening</button>
+            <div class="action-buttons">
+                <button id="show-add-meal">Legg til Måltid 🍽️</button>
+                <button id="show-add-workout">Legg til Trening 💪</button>
+            </div>
+            
+            <div id="daily-log-container">
+                <h3>Dagens Logg <button id="reset-button" style="background: var(--warning-color); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; float: right;">Tøm dag</button></h3>
+                <ul id="daily-log">
+                    </ul>
+            </div>
+        </div>
 
-            <h3>Detaljert Logg</h3>
-            <ul id="daily-log">
-                </ul>
-            <button id="reset-button" class="reset-button">Tøm Dagens Logg</button>
-        </section>
-
-        <section id="add-meal" class="view form-view">
+        <div id="add-meal" class="view">
             <h2>Legg til Måltid</h2>
             <form id="meal-form">
-                <label for="meal-type">Måltid:</label>
-                <select id="meal-type" required>
-                    <option value="Frokost">Frokost</option>
-                    <option value="Lunsj">Lunsj</option>
-                    <option value="Middag">Middag</option>
-                    <option value="Snack">Snack</option>
-                </select>
                 
-                <label for="meal-kcal">Kalorier (Kcal):</label>
-                <input type="number" id="meal-kcal" min="1" required>
+                <div id="meal-manual-input" style="display: block;">
+                    <label for="meal-type">Beskrivelse:</label>
+                    <select id="meal-type" required>
+                        <option value="Frokost">Frokost</option>
+                        <option value="Lunsj">Lunsj</option>
+                        <option value="Middag">Middag</option>
+                        <option value="Kveldsmat">Kveldsmat</option>
+                        <option value="Snacks">Snacks</option>
+                        <option value="Annet">Annet</option> </select>
 
-                <button type="submit" class="submit-button">Loggfør Måltid</button>
+                    <label for="meal-kcal">Antall Kcal:</label>
+                    <input type="number" id="meal-kcal" required min="1" placeholder="F.eks. 550">
+                </div>
+                
+                <button type="button" id="show-ai-search" class="submit-button" style="margin-top: 15px; background: #1976d2;">Søk etter Kcal (AI) 🔍</button>
+
+                <div id="meal-ai-search" style="display: none; margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                    <label for="food-search-term">Søk etter matvare (f.eks. "100g havregryn"):</label>
+                    <input type="text" id="food-search-term" placeholder="Skriv inn matvare og mengde">
+                    
+                    <button type="button" id="run-ai-search" class="submit-button" style="margin-top: 10px; background: #00897b;">Søk</button>
+                    
+                    <p id="ai-result-status" style="margin-top: 10px; font-weight: bold;"></p>
+                    
+                    <button type="button" id="use-ai-result" class="submit-button" style="display: none; background: #FF9800;">Bruk Kaloriverdi</button>
+                </div>
+
+
+                <button type="submit" class="submit-button" id="manual-log-button">Loggfør Måltid</button>
+                <button type="button" class="back-button" data-target="dashboard">Tilbake til Dashboard</button>
             </form>
-            <button class="back-button" data-target="dashboard">← Tilbake</button>
-        </section>
+        </div>
 
-        <section id="add-workout" class="view form-view">
+        <div id="add-workout" class="view">
             <h2>Legg til Trening</h2>
             <form id="workout-form">
-                <label for="workout-type">Velg Treningsplan/Aktivitet:</label>
+                <label for="workout-type">Type Trening (ca.):</label>
                 <select id="workout-type" required>
-                    <option value="400">Løping 30 min (400 Kcal)</option>
-                    <option value="550">Styrketrening 1 time (550 Kcal)</option>
-                    <option value="200">Gange 1 time (200 Kcal)</option>
+                    <option value="">Velg type</option>
                     <option value="manual">Manuell Kcal inntasting</option>
+                    <option value="250">Lett Tur (250 Kcal)</option>
+                    <option value="400">Rask Gåtur / Yoga (400 Kcal)</option>
+                    <option value="650">Løping / Hard Trening (650 Kcal)</option>
+                    <option value="800">Intensiv Cardio / Styrke (800 Kcal)</option>
                 </select>
-                
-                <div id="manual-kcal-input" style="display:none;">
-                    <label for="workout-kcal">Kalorier Forbrukt (Kcal):</label>
-                    <input type="number" id="workout-kcal" min="1">
+
+                <div id="manual-kcal-input" style="display: none; margin-top: 10px;">
+                    <label for="workout-kcal">Manuell Kcal Forbrukt:</label>
+                    <input type="number" id="workout-kcal" min="1" placeholder="F.eks. 450">
                 </div>
-                
-                <div class="note">
-                    *I en ekte app ville dette feltet hentes automatisk fra iPhone Health App (HealthKit).
-                    For denne MVP-en må du legge det inn manuelt.
-                </div>
-                
+
                 <button type="submit" class="submit-button">Loggfør Trening</button>
+                <button type="button" class="back-button" data-target="dashboard">Tilbake til Dashboard</button>
             </form>
-            <button class="back-button" data-target="dashboard">← Tilbake</button>
-        </section>
+        </div>
 
-    </div>
+    </main>
 
-    <script src="kaloritrakker.js"></script>
-</body>
+    <script src="DIN_JS_FILNAVN.js"></script>
+    </body>
 </html>

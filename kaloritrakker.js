@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // NY KONSTANT: Standard daglig forbrenning (kan justeres av brukeren senere)
+    const BASE_CALORIE_BURN_DAILY = 2000; 
+
     // DOM-elementer
     const dashboard = document.getElementById('dashboard');
     const addMealView = document.getElementById('add-meal');
@@ -39,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return JSON.parse(localStorage.getItem('dailyLog')) || {};
     }
 
-    // NY FUNKSJON: Beregner startdatoen for inneværende uke (Mandag)
+    // Beregner startdatoen for inneværende uke (Mandag)
     function getStartOfWeek() {
         const now = new Date();
         const dayOfWeek = now.getDay(); // 0 = Søndag, 1 = Mandag, osv.
@@ -49,11 +52,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return startOfWeek;
     }
 
-    // NY FUNKSJON: Henter loggføringer kun for inneværende uke
+    // Henter loggføringer kun for inneværende uke
     function getWeekLog() {
         const allLog = getAllLogData();
         const startOfWeek = getStartOfWeek().getTime();
         const weekLog = [];
+        const uniqueDaysLoggedThisWeek = new Set(); // For å telle unike dager
 
         // Iterer gjennom hver dag i lagringsloggen
         for (const dateString in allLog) {
@@ -62,9 +66,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Sjekk om datoen er i inneværende uke (etter eller lik Mandag)
             if (date.getTime() >= startOfWeek) {
                 weekLog.push(...allLog[dateString]);
+                uniqueDaysLoggedThisWeek.add(dateString);
             }
         }
-        return weekLog;
+        
+        // Returnerer loggen og antallet unike dager for ukentlig baseline-beregning
+        return { log: weekLog, days: uniqueDaysLoggedThisWeek.size };
     }
 
     // Henter kun dagens logg
@@ -91,12 +98,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funksjon for å oppdatere dashboard (beregninger og visning)
     function updateDashboard() {
         const dailyLog = getDailyLog();
-        const weeklyLog = getWeekLog(); // Hent ukens logg
+        const { log: weeklyLog, days: daysInWeekLogged } = getWeekLog(); // Henter ukens logg og antall dager
 
         let dailyKcalIn = 0;
-        let dailyKcalBurned = 0;
+        // START ENDRING: Legg til standard daglig forbruk
+        let dailyKcalBurned = BASE_CALORIE_BURN_DAILY; 
+        // SLUTT ENDRING
+
         let weeklyKcalIn = 0;
-        let weeklyKcalBurned = 0;
+        // START ENDRING: Ukentlig base = Base * antall dager med loggføring
+        let weeklyKcalBurned = daysInWeekLogged * BASE_CALORIE_BURN_DAILY; 
+        // SLUTT ENDRING
         
         dailyLogList.innerHTML = '';
 
@@ -106,7 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 dailyKcalIn += entry.kcal;
                 dailyLogList.innerHTML += `<li>${entry.time} | 🍽️ ${entry.description} <span>+${entry.kcal} Kcal</span></li>`;
             } else if (entry.type === 'workout') {
-                dailyKcalBurned += entry.kcal;
+                // Trening legges til over standardforbruket
+                dailyKcalBurned += entry.kcal; 
                 dailyLogList.innerHTML += `<li>${entry.time} | 💪 ${entry.description} <span>-${entry.kcal} Kcal</span></li>`;
             }
         });
@@ -116,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (entry.type === 'meal') {
                 weeklyKcalIn += entry.kcal;
             } else if (entry.type === 'workout') {
+                // Trening legges til over ukens baseline
                 weeklyKcalBurned += entry.kcal;
             }
         });

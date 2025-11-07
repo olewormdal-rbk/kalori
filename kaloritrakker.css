@@ -1,174 +1,24 @@
-/* Generell mobiltilpasset styling for app-følelse */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f2f5;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-}
-
-#app-container {
-    width: 100%;
-    max-width: 450px; /* Begrenser bredden for å simulere en mobilskjerm */
-    background-color: #ffffff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    min-height: 100vh;
-}
-
-header {
-    background-color: #0d47a1;
-    color: white;
-    padding: 20px 15px;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-header h1 {
-    margin: 0;
-    font-size: 24px;
-}
-
-h2 {
-    color: #0d47a1;
-    margin-top: 0;
-    margin-bottom: 20px;
-    padding: 0 15px;
-}
-
-/* Visningskontroll */
-.view {
-    padding: 20px 15px;
-    display: none;
-}
-
-.view.active {
-    display: block;
-}
-
-/* Dashboard oppsummering */
-.summary-grid {
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
-    margin-bottom: 30px;
-    padding: 0 15px;
-}
-
-.summary-box {
-    flex: 1;
-    padding: 15px 10px;
+/* Styling for Ukentlig Oppsummering */
+#weekly-summary {
+    background-color: #e3f2fd; /* Lys blå bakgrunn */
     border-radius: 8px;
-    text-align: center;
-    color: white;
+    padding: 15px;
+    margin: 20px 15px 30px 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid #0d47a1;
 }
 
-.summary-box h3 {
-    margin: 0 0 5px 0;
-    font-size: 14px;
-    font-weight: 400;
+#weekly-summary h3 {
+    color: #0d47a1;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: left;
+    padding: 0; /* Fjern padding fra h2/h3 styling */
 }
 
-.summary-box p {
-    margin: 0;
-    font-size: 22px;
-    font-weight: bold;
-}
-
-.intake { background-color: #4CAF50; } /* Grønn for inntak */
-.burned { background-color: #F44336; } /* Rød for forbruk */
-.net { background-color: #0d47a1; } /* Blå for netto */
-
-/* Knapper */
-.action-button, .submit-button, .back-button, .reset-button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.action-button {
-    background-color: #0d47a1;
-    color: white;
-}
-
-.action-button.secondary {
-    background-color: #1976d2;
-}
-
-.submit-button {
-    background-color: #009688;
-    color: white;
-    margin-top: 20px;
-}
-
-.back-button {
-    background-color: #ccc;
-    color: #333;
-    margin-top: 15px;
-}
-
-.reset-button {
-    background-color: #E57373;
-    color: white;
-    margin-top: 20px;
-}
-
-/* Skjemastyling */
-.form-view {
-    display: flex;
-    flex-direction: column;
-}
-
-label {
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: #333;
-}
-
-input[type="number"], select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-/* Loggliste */
-#daily-log {
-    list-style: none;
-    padding: 0;
-    margin-top: 15px;
-}
-
-#daily-log li {
-    background-color: #f7f7f9;
-    padding: 10px 15px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+#weekly-summary p {
+    margin: 5px 0;
     font-size: 15px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.log-kcal {
-    font-weight: bold;
-}
-
-.note {
-    font-size: 12px;
-    color: #999;
-    margin-top: 15px;
-    padding: 10px;
-    border: 1px dashed #ddd;
-    border-radius: 4px;
+    color: #333;
 }
